@@ -5,6 +5,11 @@ class neural_network:
 		self.hidden_layers = hidden_layers
 		self.output_layer = output_layer
 
+	def fit(self, x_train, y_train):
+		for i in range(x_train):
+			self.forward(input=x_train[i])
+			self.backpropagation(y_true=y_train[i])
+
 	def forward(self, input):
 		for hidden_layer in self.hidden_layers:
 			hidden_layer.forward(input)
