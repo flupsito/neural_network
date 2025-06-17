@@ -6,8 +6,8 @@ class neural_network:
 		self.output_layer = output_layer
 
 	def fit(self, x_train, y_train):
-		for i in range(x_train):
-			self.forward(input=x_train[i])
+		for i in range(len(x_train)):
+			print(f"prediciton of {x_train[i]}\tis {self.forward(input=x_train[i])}\tthis is {(self.forward(input=x_train[i])==y_train[i]).all()}")
 			self.backpropagation(y_true=y_train[i])
 
 	def forward(self, input):
@@ -15,7 +15,7 @@ class neural_network:
 			hidden_layer.forward(input)
 			input = hidden_layer.output
 		self.output_layer.forward(input)
-		return self.output_layer.prediction
+		return mayority_vote(self.output_layer.prediction)
 
 	def backpropagation(self, y_true):
 		output = self.output_layer.backward_path(y_true)
@@ -23,7 +23,10 @@ class neural_network:
 			output = layer.backward_path(output)
 
 	def predict(self, input):
-		return mayority_vote(self.forward(input))
+		predictions = []
+		for i in range(len(input)):
+			predictions.append(mayority_vote(self.forward(input[i])))
+		return predictions
 
 class dense_layer:
 	def __init__(self, n_inputs, n_outputs, learning_rate, weights = None):
@@ -95,8 +98,6 @@ class softmax_layer:
 
 	def __soft_max_error(self, y_true):
 		self.delta = self.prediction - y_true
-
-
 
 
 def relu(value):
