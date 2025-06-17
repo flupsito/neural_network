@@ -14,7 +14,9 @@ How to:
   the learning rate has to be set by the user
   activation and softmax objects dont require arguments
   One has to create a neural network object:
-  needed arguments are list of hidden layer starting with the hidden_layer closest to the input
-  one output_layer object
+  needed arguments are a list of hidden layer starting with the hidden_layer closest to the input
+  towards the output_layer
 
-  after the initialization training the 
+  after the initialization the training of the model can be done by calling fit() with the training data.
+
+  to predict the class of new data call predict() with the data to test 
