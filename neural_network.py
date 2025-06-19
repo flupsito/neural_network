@@ -5,17 +5,21 @@ class neural_network:
 		self.hidden_layers = hidden_layers
 		self.output_layer = output_layer
 
-	def fit(self, x_train, y_train):
+	def fit(self, x_train, y_train, batch):
 		for i in range(len(x_train)):
-			print(f"prediciton of {x_train[i]}\tis {self.forward(input=x_train[i])}\tthis is {(self.forward(input=x_train[i])==y_train[i]).all()}")
+			pred = self.forward(input=x_train[i])
+			print(f"costs of prediction: {cross_entropy(pred, y_train[i]):.3f}\tprediciton of {x_train[i]}\tis {pred}\tthis is {(mayority_vote(pred)==y_train[i]).all()}")
 			self.backpropagation(y_true=y_train[i])
+			if (i + 1) % batch == 0:
+				print("update")
+				self.updates()
 
 	def forward(self, input):
 		for hidden_layer in self.hidden_layers:
 			hidden_layer.forward(input)
 			input = hidden_layer.output
 		self.output_layer.forward(input)
-		return mayority_vote(self.output_layer.prediction)
+		return self.output_layer.prediction
 
 	def backpropagation(self, y_true):
 		output = self.output_layer.backward_path(y_true)
@@ -27,15 +31,29 @@ class neural_network:
 		for i in range(len(input)):
 			predictions.append(mayority_vote(self.forward(input[i])))
 		return predictions
+	
+	def predict_proba(self, input):
+		predictions = []
+		for i in range(len(input)):
+			predictions.append(self.forward(input[i]))
+		return predictions
+	
+	def updates(self):
+		for layer in self.hidden_layers:
+			if isinstance(layer, dense_layer):
+				layer.update_weights()
+				layer.update_bias()
 
 class dense_layer:
 	def __init__(self, n_inputs, n_outputs, learning_rate, weights = None):
 		if weights:
 			self.weights = weights
 		else:
-			self.weights = np.full(shape=(n_outputs, n_inputs), fill_value=0.1)
+			self.weights = np.random.uniform(-1,1,(n_outputs,n_inputs))
 		self.bias = np.zeros(shape=(n_outputs,1))
 		self.learning_rate = learning_rate
+		self.gow = list()
+		self.gob = list()
 		
 	def forward(self, input):
 		self.__pre_activation_output(input)
@@ -46,22 +64,26 @@ class dense_layer:
 	
 	def backward_path(self, delta):
 		delta = np.array(delta)
-		self.update_weights(delta)
-		self.update_bias(delta)
 		self.dCda = np.dot(np.transpose(self.weights), delta)
+		self.gow.append(self.gradient_of_weights(delta))
+		self.gob.append(self.gradient_of_bias(delta))
 		return self.dCda
 	
-	def update_weights(self, delta):
-		gow = self.gradient_of_weights(delta)
-		self.weights = self.weights - self.learning_rate * gow
+	def update_weights(self):
+		self.weights = self.weights - self.learning_rate * np.mean(self.gow)
+		self.gow.clear()
 
-	def update_bias(self, delta):
-		self.bias = self.bias - self.learning_rate * delta
+	def update_bias(self):
+		self.bias = self.bias - self.learning_rate * np.mean(self.gob)
+		self.gob.clear()
 
 	def gradient_of_weights(self, delta):
 		d = np.expand_dims(delta, axis=1)
 		i = np.expand_dims(self.input, axis=1)
 		return d * np.transpose(i)
+
+	def gradient_of_bias(self, delta):
+		return delta
 
 class activationLayer:
 	def __init__(self):
