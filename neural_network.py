@@ -25,6 +25,7 @@ class neural_network:
 		output = self.output_layer.backward_path(y_true)
 		for layer in reversed(self.hidden_layers):
 			output = layer.backward_path(output)
+		return output
 
 	def predict(self, input):
 		predictions = []
